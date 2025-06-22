@@ -1,4 +1,5 @@
 from typing import List
+import random
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -44,13 +45,13 @@ class WebScraper:
         # Initialize driver on creation
         self.setup_driver()
 
-        def _get_random_user_agent(self):
-            """Return a realistic user agent to avoid detection."""
-            agents = [
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-            ]
-            return random.choice(agents)
+    def _get_random_user_agent(self):
+        """Return a realistic user agent to avoid detection."""
+        agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+        ]
+        return random.choice(agents)
         
     def setup_driver(self) -> None:
         """
@@ -136,17 +137,3 @@ class WebScraper:
                     return False
         
         return False
-    
-    def extract_data(self) -> List[dict]:
-        """
-        Abstract method for extracting data from the current page.
-        Should be overridden by subclasses for specific site implementations.
-        
-        Returns:
-            list: List of dictionaries containing extracted data
-            
-        Raises:
-            NotImplementedError: If not implemented by subclass
-        """
-        raise NotImplementedError("extract_data() must be implemented by subclass")
-    
