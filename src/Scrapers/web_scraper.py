@@ -43,7 +43,7 @@ class WebScraper:
         self.user_agent = user_agent or self._get_random_user_agent()
 
         # Initialize driver on creation
-        self.setup_driver()
+        self._setup_driver()
 
     def _get_random_user_agent(self):
         """Return a realistic user agent to avoid detection."""
@@ -53,7 +53,7 @@ class WebScraper:
         ]
         return random.choice(agents)
         
-    def setup_driver(self) -> None:
+    def _setup_driver(self) -> None:
         """
         Configure and initialize Chrome WebDriver with stealth options.
         """
