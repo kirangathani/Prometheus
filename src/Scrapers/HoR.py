@@ -2,11 +2,13 @@ from typing import List, Dict
 import re
 import os
 import time
+from datetime import datetime
 
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC # Common naming convention
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
@@ -14,30 +16,31 @@ from webdriver_manager.chrome import ChromeDriverManager
 from .web_scraper import WebScraper
 
 class HoR(WebScraper):
-    BASE_URL = "https://disclosures-clerk.house.gov/FinancialDisclosure"
+    BASE_URL: str = "https://disclosures-clerk.house.gov/FinancialDisclosure"
+    CURRENT_YEAR: str = str(datetime.now().year)
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._set_download_dir()
     
     def _set_download_dir(self) -> str:
-        """Responsible for extending the chrome_options attribute of the parent class to include some
-        settings for the downloading of files. Including setting the correct filepath for the downloads
+        """Responsible for changing the chrome_driver experimental preferences to (1) allow for downloading, and 
+        (2) select the correct destination folder for downloads.
 
         Returns:
             download_dir_path (str): The file path from the cwd to the target download dir.
         """
         self._make_download_dir()
         
-        download_options = [
-            f'--download-default-directory={self.download_dir_path}',
-            '--disable-web-security',  # Sometimes needed for downloads
-            '--allow-running-insecure-content'  # Sometimes needed for downloads
-        ]
+        # Configure download behavior after driver creation
+        if self.driver:
+            self.driver.execute_cdp_cmd('Page.setDownloadBehavior', {
+                'behavior': 'allow',
+                'downloadPath': self.download_dir_path
+            })
+            
+            time.sleep(2)
         
-        print(f"These are the attributes of the class: {self.__str__()}")
-        
-        self.chrome_options.extend(download_options)
         return self.download_dir_path
     
     def _make_download_dir(self, dir_name: str = "DisclosureFiles") -> str:
@@ -55,6 +58,8 @@ class HoR(WebScraper):
             print(f"Created the download dir with this path: {self.download_dir_path}")
         else:
             print(f"Using exsiting directory as the download dir with the path: {self.download_dir_path}")
+        
+        print(f"THis is the download dir path from the init function of the child: {self.download_dir_path}")
         
         return self.download_dir_path
     
@@ -74,58 +79,59 @@ class HoR(WebScraper):
             raise ValueError(f"Please input correct years! Here is a list of the available years:\n{available_years}")
         
         available_years = self._get_all_years()
-        links = self._get_disclosure_links_by_year()
+        links = self._get_disclosure_link_hrefs()
         
         if not years:
             years = available_years
-            
-        year_links = {year: link for year, link in zip(available_years, links)}
-        print(f"These are the year-link pairs:{year_links}") 
         
+        # Download the correct FDs    
+        year_links = {year: link for year, link in zip(available_years, links)}
+        self._download_desired_FDs(years=years, year_links=year_links)
+        
+        pass
+    
+
+    def _download_desired_FDs(self, years: List[str], year_links: Dict[str, str], current_year: str=CURRENT_YEAR) -> None:
+        """Responsible for downloading all of the desired FDs into the download dictionary. This is simply done through URL
+        navigation with the chrome webdriver. The targeting of the download folder is done during the __init__ function. We will delete an
+        existing file if it is for the current year and within the download folder to redownload a file from the web. For non-current year
+        files we will simply avoid the download and use the file already within the repo.
+
+        Args:
+            years (List[str]): the years for which we want to get FDs for
+            year_links (Dict[str, str]): dictionary mapping the years to the PDF links.
+            current_year (str): _description_. Defaults to CURRENT_YEAR. The current year.
+        """
+        
+        # Get all the existing zip files...
+        existing_files = os.listdir(self.download_dir_path)
         
         # Navigate to each link we need to:
         for year in years:
-            print(f"This is the year we are on: {year}")
-            existing_files = set(os.listdir(self.download_dir_path))
-            
-            page_title = self.driver.title
-            print(f"This is the page title: {page_title} for this link: {year_links[year]}")
-            
-            self.go_to_url(year_links[year]) # Go to url to download.
-            
-            timeout = 30
-            start_time = time.time()
-            downloaded_file = None
-            while (time.time() - start_time) < timeout:
-                time.sleep(1)
+            if year == current_year:
+                is_current_year = True
+            else:
+                is_current_year = False
         
-                current_files = set(os.listdir(self.download_dir_path))
-                print(f"Here are the names of the current files: {current_files}")
-                new_files = current_files - existing_files
-                print(f"Here are the names of the new files: {new_files}")    
-                
-                for file in new_files:
-                    print(f"We have entered, the new files for loop - there is at least one new file!")
-                    print(f"THis is the new file name: {file}")
-                    if file.startswith(f"{year}FD") and file.endswith(".zip"):
-                        print(f"This file {file}, Passed the new file check.")
-                        downloaded_file = os.path.join(self.download_dir_path, file)
-                        print(f"Downloaded file: {downloaded_file}")
-                        break # Break from the for loop
-                
-                if downloaded_file:
-                    break # break from the while loop
+            existing_duplicate_files = [file for file in existing_files if file.startswith(year) and file.endswith(".zip")]
             
-            if not downloaded_file:
-                raise FileNotFoundError(f"File download failed due to downloaded_file not existing for this link: {year_links[year]}")
+            if existing_duplicate_files: # If there are duplicates...
+                if is_current_year:
+                    for file in existing_duplicate_files:
+                        filepath = os.path.join(self.download_dir_path, file)
+                        os.remove(filepath)
+                        print(f"Deleting existing file for the current year. Current Year: {year}. Deleted file: {filepath}")
+                else:
+                    continue # Skipping the url navigation and therefore the file download.
+                
+            # Get the new file...
+            self.go_to_url(year_links[year])
+            print(f"Downloading {year_links[year]}")
+            while any(file.endswith(".crdownload") for file in os.listdir(self.download_dir_path)):
+                time.sleep(1) # Sleep until there are no pending downloads.            
             
-            if not os.path.exists(downloaded_file):
-                raise FileNotFoundError(f"File download failed for {year_links[year]}!") 
-        
         pass
 
-            
-    
     def _go_to_HoR_website(self, url=BASE_URL) -> None:
         self.go_to_url(url)
     
@@ -142,16 +148,21 @@ class HoR(WebScraper):
                     return False
         return True
     
-    def _get_disclosure_links_by_year(self) -> List[str]:
-        """Returns a list of hrefs for the years. Uses the XPATH to find the relevant links."""
+    def _get_disclosure_link_elements(self) -> List[WebElement]:
+        """Returns a list of the link objects for the years. Uses the XPATH to find the relevant links."""
         year_links = self.driver.find_elements(By.XPATH, "//a[contains(@href, 'FD.zip')]")
-        print(f"Link return:{[link.get_attribute("href") for link in year_links]}")
-        return [link.get_attribute("href") for link in year_links]
+        return year_links
+    
+    def _get_disclosure_link_hrefs(self) -> List[str]:
+        """Returns a list of hrefs for the years. Uses the WebElement link objects by calling the _get_disclosure_link_elements() function."""
+        year_links = self._get_disclosure_link_elements()
+        hrefs = [link.get_attribute("href") for link in year_links]
+        return hrefs
     
     def _get_all_years(self) -> List[str]:
         """Responsible for calling the private function that gets all the relevant hrefs, then
         using regex to go through these hrefs to find all the years for which there is disclosure information."""
-        year_links = self._get_disclosure_links_by_year()
+        year_links = self._get_disclosure_link_hrefs()
         years = []
         for link in year_links:
             year_match = re.search(r"(\d{4})FD\.zip", link)
