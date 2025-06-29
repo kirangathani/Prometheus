@@ -13,3 +13,11 @@ From the user's perspective:
  - Operation is carried out.
 ```
 
+## Notes - things to fix
+
+ - We need to make sure that the download dir creation does not overwrite an existing download_dir? Can we implement a check before making a new download_dir file?
+ - We need to make sure that the programme knows to use the most recent .zip() file when we use pattern matching to find all of the files. We need the one with the highest (n).
+
+# To do next time!!
+**We have an issue with the downloading of the files - next time you work on this focus on (1) downloading the files through a clickable link instead of a url navigation (which doesn't trigger chrome's download functionality), and (2) you need to set the download folder preferences through the experimental preferences of chrome instead of through the simple extension of the chrome options list which is done through terminal.**
+

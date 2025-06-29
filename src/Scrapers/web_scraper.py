@@ -1,5 +1,6 @@
 from typing import List
 import random
+import os
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -34,11 +35,7 @@ class WebScraper:
             '--disable-dev-shm-usage',
             '--disable-gpu'
         ]
-
-        # Add custom options if provided
-        if chrome_options:
-            self.chrome_options.extend(chrome_options)
-
+    
         # Set user agent
         self.user_agent = user_agent or self._get_random_user_agent()
 

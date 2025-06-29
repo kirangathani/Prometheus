@@ -2,15 +2,11 @@ from src import Scrapers
 import time
 
 hor_scraper = Scrapers.HoR()
-hor_scraper._go_to_HoR_website()
 
-# Sleeping
-time.sleep(10)
+hor_scraper.scrape_disclosures()
 
-# Simple debugging to see if these elements actually have text
-hor_scraper._debug_year_links()
+links = hor_scraper._get_disclosure_links_by_year()
+print(f"These are the links from calling from main:{links}")
 
-years = hor_scraper._get_all_years()
-print(years)
 
 
