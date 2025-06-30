@@ -13,3 +13,9 @@ From the user's perspective:
  - Operation is carried out.
 ```
 
+# To Do Now (20250630)
+ - We have made the function responsible for downloading the zip files, and storing them in a folder.
+ - We now need functionality responsible for extracting the HTML XML files from these zip files.
+ - Then we need to put these in a separate folder.
+Let's see how far we get with that for now! 
+

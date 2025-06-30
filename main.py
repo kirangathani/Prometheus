@@ -1,5 +1,4 @@
 from src import Scrapers
-import time
 
 hor_scraper = Scrapers.HoR()
 

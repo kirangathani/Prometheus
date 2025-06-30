@@ -1,0 +1,149 @@
+{
+    "FinancialDisclosure": {
+        "Member": [
+            {
+                "Prefix": null,
+                "Last": "BINGEN-TYTLER",
+                "First": "KARI A.",
+                "Suffix": null,
+                "FilingType": "A",
+                "StateDst": "NS00",
+                "Year": "2014",
+                "FilingYear": "2013",
+                "FilingDate": "4/21/2014",
+                "DocID": "8214528",
+                "DisclosureType": "FD"
+            },
+            {
+                "Prefix": "HONORABLE",
+                "Last": "CAMPBELL",
+                "First": "JOHN",
+                "Suffix": null,
+                "FilingType": "A",
+                "StateDst": "CA45",
+                "Year": "2014",
+                "FilingYear": "2013",
+                "FilingDate": "5/1/2014",
+                "DocID": "8214602",
+                "DisclosureType": "FD"
+            },
+            {
+                "Prefix": null,
+                "Last": "CLARK",
+                "First": "KATHERINE",
+                "Suffix": null,
+                "FilingType": "A",
+                "StateDst": "MA05",
+                "Year": "2014",
+                "FilingYear": "2013",
+                "FilingDate": "4/30/2014",
+                "DocID": "8214656",
+                "DisclosureType": "FD"
+            },
+            {
+                "Prefix": "HONORABLE",
+                "Last": "DOGGETT",
+                "First": "LLOYD",
+                "Suffix": null,
+                "FilingType": "A",
+                "StateDst": "TX35",
+                "Year": "2014",
+                "FilingYear": "2013",
+                "FilingDate": "4/30/2014",
+                "DocID": "8214603",
+                "DisclosureType": "FD"
+            },
+            {
+                "Prefix": null,
+                "Last": "HAILEY",
+                "First": "SEAN",
+                "Suffix": null,
+                "FilingType": "O",
+                "StateDst": "WM00",
+                "Year": "2014",
+                "FilingYear": "2013",
+                "FilingDate": "4/24/2014",
+                "DocID": "8214527",
+                "DisclosureType": "FD"
+            },
+            {
+                "Prefix": "HONORABLE",
+                "Last": "HINOJOSA",
+                "First": "RUBEN",
+                "Suffix": null,
+                "FilingType": "A",
+                "StateDst": "TX15",
+                "Year": "2014",
+                "FilingYear": "2013",
+                "FilingDate": "4/29/2014",
+                "DocID": "8214604",
+                "DisclosureType": "FD"
+            },
+            {
+                "Prefix": null,
+                "Last": "KRUPNICK",
+                "First": "DANIEL E.",
+                "Suffix": null,
+                "FilingType": "T",
+                "StateDst": "NY26",
+                "Year": "2014",
+                "FilingYear": "2014",
+                "FilingDate": "4/23/2014",
+                "DocID": "8214526",
+                "DisclosureType": "FD"
+            },
+            {
+                "Prefix": null,
+                "Last": "PIGGEE",
+                "First": "DARRYL A.",
+                "Suffix": null,
+                "FilingType": "A",
+                "StateDst": "MO01",
+                "Year": "2014",
+                "FilingYear": "2013",
+                "FilingDate": "4/2/2014",
+                "DocID": "8214391",
+                "DisclosureType": "FD"
+            },
+            {
+                "Prefix": null,
+                "Last": "VERREAU",
+                "First": "REBECCA B.",
+                "Suffix": null,
+                "FilingType": "A",
+                "StateDst": "CB00",
+                "Year": "2014",
+                "FilingYear": "2013",
+                "FilingDate": "5/2/2014",
+                "DocID": "8214601",
+                "DisclosureType": "FD"
+            },
+            {
+                "Prefix": null,
+                "Last": "WHITE",
+                "First": "RICHARD A.",
+                "Suffix": null,
+                "FilingType": "T",
+                "StateDst": "CP00",
+                "Year": "2014",
+                "FilingYear": "2014",
+                "FilingDate": "4/17/2014",
+                "DocID": "8214529",
+                "DisclosureType": "FD"
+            },
+            {
+                "Prefix": null,
+                "Last": "WYSONG",
+                "First": "DAVID",
+                "Suffix": null,
+                "FilingType": "A",
+                "StateDst": "TX16",
+                "Year": "2014",
+                "FilingYear": "2013",
+                "FilingDate": "5/1/2014",
+                "DocID": "8214600",
+                "DisclosureType": "FD"
+            }
+        ]
+    }
+}

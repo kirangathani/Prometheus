@@ -2,7 +2,10 @@ from typing import List, Dict
 import re
 import os
 import time
+import json
 from datetime import datetime
+import zipfile
+import xmltodict
 
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -18,6 +21,8 @@ from .web_scraper import WebScraper
 class HoR(WebScraper):
     BASE_URL: str = "https://disclosures-clerk.house.gov/FinancialDisclosure"
     CURRENT_YEAR: str = str(datetime.now().year)
+    HORXML_PATH: str = os.path.join(os.getcwd(), "HoRXMLs")
+    HORJSON_PATH: str = os.path.join(os.getcwd(), "HoRJSONs")
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -39,11 +44,11 @@ class HoR(WebScraper):
                 'downloadPath': self.download_dir_path
             })
             
-            time.sleep(2)
+            time.sleep(2) # Time to allow the command to take effect.
         
         return self.download_dir_path
     
-    def _make_download_dir(self, dir_name: str = "DisclosureFiles") -> str:
+    def _make_download_dir(self, dir_name: str = "HoRFDs") -> str:
         """Responsible for creating a directory to house the downloaded PDFs showing the disclosure information.
 
         Returns:
@@ -84,12 +89,111 @@ class HoR(WebScraper):
         if not years:
             years = available_years
         
-        # Download the correct FDs    
+        # Download the correct FDs into HoRFDs    
         year_links = {year: link for year, link in zip(available_years, links)}
         self._download_desired_FDs(years=years, year_links=year_links)
         
+        time.sleep(5)
+        
+        # Extract the HTML XML files from the HoRFDs and put into the HoRXML
+        self._download_desired_XMLs(years=years)
+        
+        # Convert the extracted XML files to JSON format in the HoRJSON folder.
+        self._convert_XMLs_to_JSONs()
+        
         pass
     
+    def _convert_XMLs_to_JSONs(self, hor_xml_path: str=HORXML_PATH, hor_json_path: str=HORJSON_PATH) -> None:
+        """Responsible for iterating through all of the xml files in the hor_xml_path folder, then converting each of them
+        to a json file of the same name in the json folder (just with the .json extension instead).
+
+        Args:
+            hor_xml_path (str): the path for the folder for the xml files. Defaults to HORXML_PATH.
+            hor_json_path (str): the path for the folder for the json files. Defaults to HORJSON_PATH.
+        """
+        
+        for file in os.listdir(hor_xml_path):
+            if file.endswith(".xml"):
+                xml_file_path = os.path.join(hor_xml_path, file)
+                json_file_path = os.path.join(hor_json_path, file.replace(".xml", ".json"))
+                
+                with open(xml_file_path, "r", encoding="utf-8") as file:
+                    xml_content = file.read()
+                    
+                data_dict = xmltodict.parse(xml_content)
+                
+                with open(json_file_path, "w", encoding="utf-8") as file:
+                    json.dump(data_dict, file, indent=4, ensure_ascii=False)
+                
+                print(f"Converted file: {xml_file_path} to json: {json_file_path}")
+        
+    
+    def _download_desired_XMLs(self, years: List[str], current_year: str=CURRENT_YEAR, hor_xml_path: str=HORXML_PATH) -> None:
+        """Responsible for (1) going through the hor_xml_path folder to check whether we have existing files. If we are on the current year then it will delete old files.
+        if we are on a new year, then it will abort the download process. The download process involved entering the self.download_dir_path folder, taking the relevant file names
+        through checking the years of the file names, then getting the one with the highest bracketed number (TODO - this might be overkill maybe we can get rid of this and just
+        impose stricter data validation for the hor_fd_path folder). We then extract the .xml file from the relevant zip file and add it to the hor_xml_path folder.
+
+        Args:
+            years (List[str]): list of years for which the user wants to scrape data.
+            current_year (str, optional): current year - taken with datetime. Defaults to CURRENT_YEAR.
+            hor_xml_path (str, optional): path to the destination folder for the HTML XML files which have the data. Defaults to HORXML_PATH.
+
+        Raises:
+            FileNotFoundError: Happens when we cannot find the HTML XML file in the zip file for the relevant year.
+        """
+        
+        for year in years:
+            if year == current_year:
+                is_current_year = True
+            else:
+                is_current_year = False
+                
+            existing_duplicate_files = [file for file in os.listdir(hor_xml_path) if file.startswith(year)]
+            
+            if existing_duplicate_files:
+                if is_current_year:
+                    for file in existing_duplicate_files:    
+                        filepath = os.path.join(hor_xml_path, file)
+                        os.remove(filepath)
+                        print(f"We have removed the filepath: {filepath} as it is an old version for the current year ({year})")
+                else:
+                    continue # Keep old files if not the current year.
+                
+            # Get all candidate zip files for that year.
+            relevant_zip_files = [os.path.join(self.download_dir_path, file) for file in os.listdir(self.download_dir_path) if file.startswith(f"{year}FD") and file.endswith(".zip")]
+            print(f"These are the relevant zip files for the year ({year}). {relevant_zip_files}")
+            
+            # Choose relevant zip file from these.
+            max_number = -1
+            relevant_zip_file = None
+            for file in relevant_zip_files:
+                filename = os.path.basename(file)
+                number = self._extract_number_from_filename(filename)
+                if number > max_number:
+                    max_number = number
+                    relevant_zip_file = file
+            
+            with zipfile.ZipFile(relevant_zip_file, "r") as zip_file:
+                contents = zip_file.namelist()
+                
+                xml_file = None
+                for file in contents:
+                    if file.endswith(".xml"):
+                        xml_file = file
+                        break
+                if not xml_file:
+                    raise FileNotFoundError(f"Error! We cannot seem to find a .xml file in the FD zip file. Please double check. This is the zip file path in question: {relevant_zip_file}.\nThese are the contents: \n{contents}")
+            
+                zip_file.extract(xml_file, hor_xml_path)
+                print(f"Extracted HTML file ({xml_file}) and placed in this folder: {hor_xml_path}")
+    
+    def _extract_number_from_filename(self, filename: str) -> int:
+        match = re.search(r"\((\d+)\)", filename)
+        if match:
+            return int(match.group(1))
+        else:
+            return 0
 
     def _download_desired_FDs(self, years: List[str], year_links: Dict[str, str], current_year: str=CURRENT_YEAR) -> None:
         """Responsible for downloading all of the desired FDs into the download dictionary. This is simply done through URL
